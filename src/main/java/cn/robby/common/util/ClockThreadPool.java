@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
- *
+ *   clock 超时处理线程池
  * </p>
  * @author jixinag
  * @date 2022/1/28
@@ -17,7 +17,7 @@ public class ClockThreadPool {
 
     static {
         AtomicInteger atomicInteger = new AtomicInteger(0);
-        THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(8, 8,
+        THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(1, 1,
                 4, TimeUnit.HOURS,
                 new LinkedBlockingQueue<>(16), r -> {
                     Thread thread = new Thread(r);

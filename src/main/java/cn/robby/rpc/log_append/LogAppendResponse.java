@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LogAppendResponse extends AbstractRpcCodec<LogAppendResponse> {
+public class LogAppendResponse extends AbstractRpcCodec {
     // term当前任期，对于领导人而言 它会更新自己的任期
     // 如果跟随者所含有的条目和 prevLogIndex 以及 prevLogTerm 匹配上了，则为 true
     private boolean success;

@@ -10,19 +10,16 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.nio.ByteOrder;
-import java.util.Objects;
 
 @Getter
 @Setter
-public abstract class AbstractRpcCodec<T> implements RpcCodec<T>, Serializable {
+public abstract class AbstractRpcCodec implements RpcCodec, Serializable {
     private Term term;
 
-    // 并发操作此buffer 的时候内部的数据会有线程安全问题
-    // 目前采用了多个实例的方式避免改问题
     @Override
     public byte[] serialize() {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer();
-        // 没和序列化都要的字节： type 和 term
+        // 每个序列化都要的字节： type 和 term
         buffer.writeBytes(ByteUtil.intToBytes(getType(), ByteOrder.BIG_ENDIAN));
         buffer.writeBytes(ByteUtil.intToBytes(this.getTerm().getValue(), ByteOrder.BIG_ENDIAN));
         subSerialize(buffer);

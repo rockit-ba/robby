@@ -11,8 +11,8 @@ import io.netty.channel.socket.SocketChannel;
 
 /**
  * <p>
- *     ChannelInitializer
- *     resp 是相对于处理器处理的请求的类型来说的
+ *     响应处理器链初始化
+ *     resp/req 是相对于当前的实例机器来说的
  * </p>
  * @author jixinag
  * @date 2022/1/21

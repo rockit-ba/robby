@@ -17,7 +17,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class VoteResponse extends AbstractRpcCodec<VoteResponse> {
+public class VoteResponse extends AbstractRpcCodec {
     // term当前任期号，以便于候选人去更新自己的任期号
     // 候选人赢得了此张选票时为真
     private boolean voteGranted;

@@ -1,29 +1,25 @@
 package cn.robby.common;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.robby.client.Client;
 import cn.robby.common.enums.Role;
 import cn.robby.common.enums.VoteResult;
+import cn.robby.common.pub_listener.impl.TimeoutPubListener;
 import cn.robby.common.status.PersistentStatus;
 import cn.robby.common.status.VolatileStatus;
 import cn.robby.common.util.TimeoutClock;
 import cn.robby.common.value_obj.LogEntry;
-import cn.robby.common.value_obj.Term;
 import cn.robby.rpc.vote.VoteRequest;
 import io.netty.channel.Channel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,14 +44,10 @@ public class RaftInstance {
     }
 
     private final static Scheduler singleScheduler = Schedulers.newSingle("voteCount_thread");
-    // 对应配置文件的 id
-    private final int id = Config.id;
     // 当前角色状态
     private volatile Role role = Role.getDefault();
     // 当前的获得的票数统计
     private AtomicInteger voteCount = new AtomicInteger(0);
-    // 是否已经投过票了
-    private AtomicBoolean voted = new AtomicBoolean(false);
     // 超时时钟
     private final TimeoutClock timeoutClock = TimeoutClock.getInstance();
 
@@ -71,17 +63,17 @@ public class RaftInstance {
         return voteCount.incrementAndGet();
     }
     /**
-     * 发起选举
+     * 开始执行发起选举
+     * 由 {@link TimeoutPubListener} 发起
      */
-    public void vote() {
+    public void doVote() {
         // 1 转变成候选人
         this.role = Role.Candidate;
         // 2 自增当前的任期号
         this.persistentStatus.getCurrentTerm().increment();
-        // 3 给自己投票,先重置票数
+        // 3 给自己投票,先重置票数(因为之前可能发起过投票，重新发起)
         this.voteCount.set(0);
         this.voteCountIncrement();
-        this.voted.set(true);
         // 4 重置选举超时计时器
         timeoutClock.restart();
         // 5 发送请求投票的 RPC 给其他所有服务器
@@ -110,13 +102,13 @@ public class RaftInstance {
 
     /**
      * 获取一个 VoteRequest 实体
-     * 该对象避免共享操作
+     * 每次发送都会创建一个对象，避免线程安全问题
      * @return VoteRequest
      */
     private VoteRequest genVoteRequest() {
         VoteRequest voteReq = new VoteRequest();
         voteReq.setTerm(this.persistentStatus.getCurrentTerm());
-        voteReq.setCandidateId(this.id);
+        voteReq.setCandidateId(Config.id);
 
         List<LogEntry> logs = this.persistentStatus.getLogEntries();
         if (CollUtil.isEmpty(logs)) {

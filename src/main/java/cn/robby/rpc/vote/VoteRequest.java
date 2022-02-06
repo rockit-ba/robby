@@ -18,7 +18,7 @@ import java.nio.ByteOrder;
  */
 @Getter
 @Setter
-public class VoteRequest extends AbstractRpcCodec<VoteRequest> {
+public class VoteRequest extends AbstractRpcCodec {
     // term候选人的任期号
     //请求选票的候选人的 ID
     private int candidateId;

@@ -3,6 +3,7 @@ package cn.robby.common.enums;
 /**
  * <p>
  *     发起投票的结果
+ *     暂未使用
  * </p>
  * @author jixinag
  * @date 2022/1/24

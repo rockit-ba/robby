@@ -4,11 +4,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.Consumer;
 
 /**
- * 所有事件监听的基类
- * @param <E>
+ * 所有需要实现 发布/订阅 模式的基类
+ * @param <E> 监听的事件类型
  */
 public class PubListener<E> {
-    private final ArrayBlockingQueue<E> blockingQueue = new ArrayBlockingQueue<>(8);
+    private final ArrayBlockingQueue<E> blockingQueue = new ArrayBlockingQueue<>(16);
 
     /**
      * 开始监听

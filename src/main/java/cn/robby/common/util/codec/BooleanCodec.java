@@ -6,7 +6,7 @@ import java.nio.ByteOrder;
 
 /**
  * <p>
- *     布尔值序列化
+ *     布尔值序列化，转化为 1/0 的字节序
  * </p>
  * @author jixinag
  * @date 2022/1/26

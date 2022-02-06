@@ -21,13 +21,12 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public class Config {
-    private static final String serverHost;
+    public static final String serverHost;
     // 实例启动端口; 超时时间可选range
     public static final Integer serverPort,
             minTimeout, maxTimeout,
             // 当前服务器的编号id
             id;
-
     // 集群地址
     public static final List<Address> cluster;
 

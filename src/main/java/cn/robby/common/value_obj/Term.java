@@ -1,6 +1,6 @@
 package cn.robby.common.value_obj;
 
-import lombok.Getter;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -9,36 +9,33 @@ import lombok.Getter;
  * @author jixinag
  * @date 2022/1/25
  */
-@Getter
 public class Term {
-    private int value = 0;
+    // 初始为0
+    private AtomicInteger value = new AtomicInteger(0);
 
     public Term() {
     }
 
     public Term(int value) {
-        this.value = value;
-    }
-
-    /**
-     * 对当前的term 编号进行增/减，正数+；负数-；
-     * @param offset int
-     */
-    public void change(int offset) {
-        this.value += offset;
+        this.value = new AtomicInteger(value);
     }
 
     /**
      * 自增
      */
     public void increment() {
-        this.value++;
+        this.value.incrementAndGet();
     }
+
+    public int getValue() {
+        return this.value.get();
+    }
+
 
     @Override
     public String toString() {
         return "Term{" +
-                "value=" + value +
+                "value=" + value.get() +
                 '}';
     }
 }

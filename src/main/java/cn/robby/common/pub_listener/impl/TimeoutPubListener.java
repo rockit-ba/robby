@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 /**
  * <p>
- *     超时事件发布订阅
+ *     超时事件发布订阅implement
  * </p>
  * @author jixinag
  * @date 2022/1/29
@@ -29,9 +29,9 @@ public class TimeoutPubListener extends PubListener<TimeoutEvent> {
         if (Objects.isNull(timeoutPubListener)) {
             Consumer<TimeoutEvent> consumer = (event) -> {
                 RaftInstance instance = RaftInstance.getInstance();
-                // 如果当前的实例已经成为leader则忽略后续的投票事件
+                // 只有当前的角色是 Follower 才可以发起 投票
                 if (instance.getRole().equals(Role.Follower)) {
-                    instance.vote();
+                    instance.doVote();
                 }
             };
             timeoutPubListener = new TimeoutPubListener();

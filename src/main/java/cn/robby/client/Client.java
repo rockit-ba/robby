@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * <p>
- * 集群内客户端，用于发送 Rpc请求
+ * 集群内客户端，用于发送 Rpc请求和接收响应
  * </p>
  *
  * @author jixinag
@@ -46,7 +46,7 @@ public class Client {
                 .channel(NioSocketChannel.class)
                 .handler(new ClientChannelInitializer());
 
-        // 存放已经成功的标记
+        // 存放已经 connect 成功的标记，用于直接跳过
         HashSet<String> tempSet = new HashSet<>();
         Flux.fromArray(Config.cluster.toArray(new Address[0]))
                 .<Optional<Channel>>map(address -> {
@@ -54,11 +54,13 @@ public class Client {
                         // 如果已经成功直接返回，不进行retry
                         return Optional.empty();
                     }
-                    LockSupport.parkNanos(3000_00_0000L);
+                    // 开发阶段停止1秒
+                    LockSupport.parkNanos(1000_000000L);
                     log.info("{} 连接中....", address);
 
                     try {
                         Channel channel = bootstrap.connect(address.getHost(), address.getPort()).sync().channel();
+                        // 连接成功则放入过滤集合，否则retry
                         tempSet.add(address.toString());
                         return Optional.of(channel);
                     } catch (InterruptedException e) {
@@ -69,6 +71,7 @@ public class Client {
                 .retry()
                 .subscribe(ele -> {
                     ele.ifPresent(channel -> {
+                        //将成功的channel 放入集合
                         channels.add(channel);
                         log.info("连接成功：{}", channel.remoteAddress());
                     });
@@ -82,7 +85,7 @@ public class Client {
      */
     public static void sourceClose() {
         eventLoopGroup.shutdownGracefully();
-        log.info("client source close");
+        log.info("客户端资源关闭");
     }
 
 }

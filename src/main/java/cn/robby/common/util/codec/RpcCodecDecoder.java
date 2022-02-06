@@ -1,6 +1,5 @@
 package cn.robby.common.util.codec;
 
-import cn.robby.common.util.TimeoutClock;
 import cn.robby.rpc.log_append.LogAppendRequest;
 import cn.robby.rpc.log_append.LogAppendResponse;
 import cn.robby.rpc.vote.VoteRequest;
@@ -26,7 +25,9 @@ public class RpcCodecDecoder extends ByteToMessageDecoder {
     public static final String NAME = "RpcCodecDecoder";
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        // 请求的类型
+        /**
+         * 请求的类型 {@link RpcCodec#voteReq} 等
+         */
         int type = in.readInt();
         RpcCodec rpcCodec = null;
         switch (type) {
@@ -44,6 +45,7 @@ public class RpcCodecDecoder extends ByteToMessageDecoder {
                 break;
         }
         Objects.requireNonNull(rpcCodec, "Rpc type 解析失败！");
+        // 调用对应实例的序列化方法
         out.add(rpcCodec.deserialize(in));
     }
 }

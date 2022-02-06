@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class LogAppendRequest extends AbstractRpcCodec<LogAppendRequest> {
+public class LogAppendRequest extends AbstractRpcCodec {
     // term 领导人的任期
 
     // 领导人 ID 因此跟随者可以对客户端进行重定向

@@ -15,8 +15,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
- *     随机超时时间
- *              最小超时时间 + （最小和最大超时时间间隔 / 集群机器数）* 当前机器编号
+ *     随机超时时间 控制
+ *      最小超时时间 + （最小和最大超时时间间隔 / 集群机器数）* 当前机器编号
  * </p>
  * @author jixinag
  * @date 2022/1/23
@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class TimeoutClock {
     private static final ThreadPoolExecutor THREAD_POOL_EXECUTOR = ClockThreadPool.THREAD_POOL_EXECUTOR;
 
+    // 哟关于暂停超时线程
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private final Condition condition = reentrantLock.newCondition();
     // 是否暂停
@@ -34,7 +35,7 @@ public class TimeoutClock {
     // timeout 就是 follower 等待成为候选人的时间
     // 超时时间，用户动态变化重置
     private int timeout;
-    // 固定的超时时间的初始值
+    // 固定的超时时间的初始值，用于重置
     private int timeoutValue;
 
     /**
@@ -74,6 +75,7 @@ public class TimeoutClock {
                 }
 
                 log.info("{} 实例超时 {} , 发布 TimeoutEvent ",Config.id, timeoutValue);
+                // 事件处理属于异步，如果当前 阻塞队列已满则会阻塞在此
                 TimeoutPubListener.getInstance().publish(new TimeoutEvent());
 
             } catch (InterruptedException e) {
@@ -86,11 +88,13 @@ public class TimeoutClock {
 
     /**
      * 重启时钟，重启是在超时线程已经结束，需要重新开启执行
-     * 超时时候时钟线程执行完毕，后面就需要重启
+     * 超时时候时钟线程执行完毕，后面就需要重启，如果上一个超时任务未结束，调用则会抛错（线程池拒绝）
      */
     public void restart() {
+        // 重新生成超时时间
         this.timeoutValue = RandomUtil.randomInt(Config.minTimeout,Config.maxTimeout);
         this.timeout = this.timeoutValue;
+        // 重置 是否暂停
         this.yield = false;
         this.start();
     }
@@ -106,7 +110,7 @@ public class TimeoutClock {
     }
 
     /**
-     * 取消暂停
+     * 取消暂停（唤醒waited的线程）
      */
     public void cancelYield() {
         reentrantLock.lock();

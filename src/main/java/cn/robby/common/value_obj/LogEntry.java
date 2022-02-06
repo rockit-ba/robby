@@ -19,8 +19,11 @@ import java.nio.charset.StandardCharsets;
 @Getter
 @Setter
 public class LogEntry {
+    // 日志的唯一递增索引
     private int index;
+    // 日志的任期号
     private Term term;
+    // 日志命令
     private String command;
 
     public LogEntry() {}
