@@ -14,13 +14,12 @@ import io.netty.channel.Channel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -43,7 +42,17 @@ public class RaftInstance {
         return instance;
     }
 
-    private final static Scheduler singleScheduler = Schedulers.newSingle("voteCount_thread");
+    private final static ExecutorService singleScheduler = Executors.newSingleThreadExecutor((run) -> {
+        Thread thread = new Thread(run,"voteCount_thread");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    private final static ExecutorService voteReqExecutor = Executors.newFixedThreadPool(Config.cluster.size() + 1,(run) -> {
+        Thread thread = new Thread(run,"vote_req");
+        thread.setDaemon(true);
+        return thread;
+    });
     // 当前角色状态
     private volatile Role role = Role.getDefault();
     // 当前的获得的票数统计
@@ -88,8 +97,9 @@ public class RaftInstance {
 
         CountDownLatch latch = new CountDownLatch(channels.size());
         channels.forEach(channel -> {
-            channel.writeAndFlush(genVoteRequest());
+            VoteRequest voteRequest = genVoteRequest();
             latch.countDown();
+            voteReqExecutor.execute(() -> channel.writeAndFlush(voteRequest));
         });
         try {
             latch.await();
